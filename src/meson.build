@@ -1,3 +1,5 @@
+
+
 #################
 # GDTOA Library #
 #################
@@ -213,21 +215,21 @@ wchar_files = files(
 
 # These files are used by all libc targets
 libc_common_files = [
-	#assert_files,
+	assert_files,
 	ctype_files,
 	locale_files,
 	#math_files,
-	#stdio_files,
+	stdio_files,
 	stdlib_files,
 	string_files,
 	support_files,
-	#time_files,
+	time_files,
 	wchar_files,
 ]
 
 # These files are used to compile libc for a build machine / your personal computer
 libc_native_files = files(
-#	'stdio/putchar_native.c',
+	'stdio/putchar_native.c',
 )
 
 # These files are used when cross-compiling libc for another platform
@@ -244,4 +246,5 @@ libc_native = static_library(
 	'c_native',
 	libc_common_files + libc_native_files,
 	include_directories: [libc_includes, arch_specific_includes],
+	dependencies: libprintf_dep,
 )
