@@ -1,3 +1,7 @@
+#################
+# GDTOA Library #
+#################
+
 gdtoa_files = files(
 	'gdtoa/src/dmisc.c',
 	'gdtoa/src/dtoa.c',
@@ -51,6 +55,16 @@ gdtoa_compiler_flags = [
 	'-DNO_FENV_H'
 ]
 
+libgdtoa = static_library('gdtoa',
+    gdtoa_files,
+    include_directories: gdtoa_includes,
+    c_args: gdtoa_compiler_flags,
+)
+
+################
+# libc Library #
+################
+
 assert_files = files('assert/assert.c')
 
 crt_files = files(
@@ -83,6 +97,13 @@ ctype_files = files(
 	'ctype/toupper.c'
 )
 
+locale_files = files('locale/langinfo.c')
+
+math_files = files(
+	'math/fabs.c',
+	'math/fabsf.c',
+)
+
 stdlib_files = files(
 	'stdlib/abs.c',
 	'stdlib/atof.c',
@@ -109,6 +130,57 @@ stdlib_files = files(
 	'stdlib/strtoul.c',
 	'stdlib/strtoll.c',
 	'stdlib/strtoull.c',
+)
+
+stdio_files = files(
+	'stdio/asprintf.c',
+	'stdio/putchar.c',
+	'stdio/puts.c',
+	'stdio/vasprintf.c',
+)
+
+string_files = files(
+	'string/memcmp.c',
+	'string/memcpy.c',
+	'string/memmem.c',
+	'string/memmove.c',
+	'string/memchr.c',
+	'string/memrchr.c',
+	'string/memset.c',
+	'string/strcat.c',
+	'string/strchr.c',
+	'string/strchrnul.c',
+	'string/strcmp.c',
+	'string/strcoll.c',
+	'string/strcpy.c',
+	'string/strcspn.c',
+	'string/strdup.c',
+	'string/strerror.c',
+	'string/strerror_r.c',
+	'string/strlen.c',
+	'string/strncat.c',
+	'string/strncmp.c',
+	'string/strncpy.c',
+	'string/strndup.c',
+	'string/strnlen.c',
+	'string/strnstr.c',
+	'string/strpbrk.c',
+	'string/strrchr.c',
+	'string/strspn.c',
+	'string/strstr.c',
+	'string/strtok.c',
+	'string/strxfrm.c'
+)
+
+support_files = files(
+	'support/fls.c',
+	'support/flsl.c',
+	'support/flsll.c'
+)
+
+time_files = files(
+	'time/asctime.c',
+	'time/asctime_r.c',
 )
 
 wchar_files = files(
@@ -139,64 +211,6 @@ wchar_files = files(
 	'wchar/wcwidth.c',
 )
 
-locale_files = files('locale/langinfo.c')
-
-math_files = files(
-    'math/fabs.c',
-    'math/fabsf.c'
-)
-
-stdio_files = files(
-    'stdio/asprintf.c',
-    'stdio/putchar.c',
-    'stdio/puts.c',
-    'stdio/vasprintf.c'
-)
-
-support_files = files(
-    'support/fls.c',
-    'support/flsl.c',
-    'support/flsll.c'
-)
-
-time_files = files(
-    'time/asctime.c',
-    'time/asctime_r.c'
-)
-
-string_files = files(
-    'string/memcmp.c',
-    'string/memcpy.c',
-    'string/memmem.c',
-    'string/memmove.c',
-    'string/memchr.c',
-    'string/memrchr.c',
-    'string/memset.c',
-    'string/strcat.c',
-    'string/strchr.c',
-    'string/strchrnul.c',
-    'string/strcmp.c',
-    'string/strcoll.c',
-    'string/strcpy.c',
-    'string/strcspn.c',
-    'string/strdup.c',
-    'string/strerror.c',
-    'string/strerror_r.c',
-    'string/strlen.c',
-    'string/strncat.c',
-    'string/strncmp.c',
-    'string/strncpy.c',
-    'string/strndup.c',
-    'string/strnlen.c',
-    'string/strnstr.c',
-    'string/strpbrk.c',
-    'string/strrchr.c',
-    'string/strspn.c',
-    'string/strstr.c',
-    'string/strtok.c',
-    'string/strxfrm.c'
-)
-
 # These files are used by all libc targets
 libc_common_files = [
 	#assert_files,
@@ -213,7 +227,7 @@ libc_common_files = [
 
 # These files are used to compile libc for a build machine / your personal computer
 libc_native_files = files(
-	#'stdio/putchar_native.c',
+#	'stdio/putchar_native.c',
 )
 
 # These files are used when cross-compiling libc for another platform
@@ -222,18 +236,12 @@ libc_standalone_files = [
 ]
 
 libc_includes = include_directories('../include')
-
 arch_specific_includes = include_directories('../arch/x86_64/include')
 
-libgdtoa = static_library('gdtoa',
-    gdtoa_files,
-    include_directories: gdtoa_includes,
-    c_args: gdtoa_compiler_flags, # New Addition
-)
-
+# We don't build the stdio files for the native variant, as we rely on the
+# System library to do the heavy lifting for missing symbols
 libc_native = static_library(
 	'c_native',
 	libc_common_files + libc_native_files,
-	# Modified line below
 	include_directories: [libc_includes, arch_specific_includes],
 )
