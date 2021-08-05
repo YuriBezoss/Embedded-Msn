@@ -25,6 +25,27 @@ libprintf_dep = declare_dependency(
 	link_with: libprintf,
 )
 
+#############################
+# openlibm Dependency Targets #
+#############################
+
+#openlibm_files = files('subprojects/openlibm/')
+openlibm_includes = include_directories(
+	'subprojects/openlibm/include/',
+	'subprojects/openlibm/src/', 
+	is_system: true)
+
+'''libopenlibm = static_library(
+	'openlibm',
+    printf_files,
+    include_directories: openlibm_includes,
+)'''
+
+libopenlibm_dep = declare_dependency(
+	include_directories: openlibm_includes,
+	#link_with: libopenlibm,
+)
+
 #######################
 # Process Source Tree #
 #######################
