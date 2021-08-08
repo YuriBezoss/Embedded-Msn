@@ -40,3 +40,18 @@ Supporting Tooling
 - [juliamath/openlibm](https://github.com/JuliaMath/openlibm)
 - [mpaland/printf](https://github.com/mpaland/printf)
 
+## Rebuild entire directory
+This will clean the build dir:
+
+$ ninja -C builddir clean
+
+This will force a reconfigure:
+
+$ ninja -C builddir reconfigure
+
+But you may also just as well nuke the entire builddir and just do a
+fresh meson build from scratch:
+
+$ [delete builddir]
+$ meson builddir
+$ ninja -C builddir 

@@ -11,43 +11,43 @@ project('Embedded Artistry libc',
 # Printf Dependency Targets #
 #############################
 
-printf_files = files('subprojects/printf/printf.c')
-printf_includes = include_directories('subprojects/printf', is_system: true)
+libprintf_files = files('subprojects/printf/printf.c')
+libprintf_includes = include_directories('subprojects/printf', is_system: true)
 
 libprintf = static_library(
 	'printf',
-    printf_files,
-    include_directories: printf_includes,
+    libprintf_files,
+    include_directories: libprintf_includes,
 )
 
 libprintf_dep = declare_dependency(
-	include_directories: printf_includes,
+	include_directories: libprintf_includes,
 	link_with: libprintf,
 )
 
-#############################
-# openlibm Dependency Targets #
-#############################
+###############################
+# Openlibm Dependency Targets #
+###############################
 
-#openlibm_files = files('subprojects/openlibm/')
 openlibm_includes = include_directories(
-	'subprojects/openlibm/include/',
-	'subprojects/openlibm/src/', 
-	is_system: true)
-
-'''libopenlibm = static_library(
-	'openlibm',
-    printf_files,
-    include_directories: openlibm_includes,
-)'''
-
-libopenlibm_dep = declare_dependency(
-	include_directories: openlibm_includes,
-	#link_with: libopenlibm,
+	'subprojects/openlibm/include',
+	'subprojects/openlibm/src',
+	is_system: true
 )
+
+openlibm_dep = declare_dependency(
+	include_directories: openlibm_includes,
+)
+
+#####################
+# CMocka Dependency #
+#####################
+
+cmocka_dep = dependency('cmocka', required: false, fallback: ['cmocka', 'cmocka_dep'])
 
 #######################
 # Process Source Tree #
 #######################
 
 subdir('src')
+subdir('test')
