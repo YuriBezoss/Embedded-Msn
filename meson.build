@@ -70,3 +70,8 @@ cmocka_dep = dependency('cmocka', required: false, fallback: ['cmocka', 'cmocka_
 
 subdir('src')
 subdir('test')
+
+run_target('clear-test-results',
+	command: meson.source_root() + '/tools/clear_test_xml.sh'
+)
+

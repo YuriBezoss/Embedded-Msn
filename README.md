@@ -63,5 +63,5 @@ Building directly with ninja
 ninja -C builddir
 
 Running tests
-meson test -C builddir
-ninja -C builddir test
+meson test -C buildresults
+ninja -C buildresults test

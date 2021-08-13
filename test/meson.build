@@ -83,3 +83,13 @@ test_output_dir = 'CMOCKA_XML_FILE=' + meson.build_root() + '/test/%g.xml'
 test('libc_tests',
 	libc_tests,
 	env: [test_output_dir])
+
+echo meson.source_root()
+
+run_target('libc-tests-xml',
+	command: [
+		meson.source_root() + '/tools/libc_tests_xml.sh',
+		libc_tests,
+		test_output_dir
+	],
+)
