@@ -65,3 +65,7 @@ ninja -C builddir
 Running tests
 meson test -C buildresults
 ninja -C buildresults test
+
+Seeing the Configuration Settings for a Given Build
+cd buildresults
+meson configure

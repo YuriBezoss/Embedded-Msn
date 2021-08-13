@@ -1,12 +1,35 @@
 project('Embedded Artistry libc',
 	['c', 'cpp'],
 	default_options : [
+		#'warning_level=3',
+		'werror=false',
 		'c_std=c11',
 		'cpp_std=c++11',
 	],
 	license: 'MIT',
 	meson_version: '>=0.52.0',
 	version: '1.0')
+
+################################
+# Project Options and Settings #
+################################
+
+c_compiler = meson.get_compiler('c')
+
+disable_unimplemented_apis = get_option('hide-unimplemented-libc-apis')
+enable_gnu_src = get_option('enable-gnu-extensions')
+
+## Left for demonstration purposes, removed in the next example.
+# add_project_arguments('-Wno-unused-parameter', language: 'c')
+
+add_project_arguments(
+	c_compiler.get_supported_arguments(
+		'-Wno-unknown-pragmas',
+		'-Wno-nonnull',
+		'-Wno-nonnull-compare',
+	),
+	language: 'c'
+)
 
 #############################
 # Printf Dependency Targets #
@@ -62,7 +85,16 @@ openlibm_dep = declare_dependency(
 # CMocka Dependency #
 #####################
 
-cmocka_dep = dependency('cmocka', required: false, fallback: ['cmocka', 'cmocka_dep'])
+# Toggling between system libraries and embedded sources
+#cmocka_dep = dependency('cmocka', required: false, fallback: ['cmocka', 'cmocka_dep'])
+
+# Alternative toogling, as there are conflict between generated libc header and build-in header
+# So we use subproject instead
+#cmocka_dep = dependency('cmocka', required : false)
+#if not cmocka_dep.found()
+cmocka_proj = subproject('cmocka')
+cmocka_dep = cmocka_proj.get_variable('cmocka_dep')
+#endif
 
 #######################
 # Process Source Tree #
@@ -71,7 +103,10 @@ cmocka_dep = dependency('cmocka', required: false, fallback: ['cmocka', 'cmocka_
 subdir('src')
 subdir('test')
 
+##################
+# Custom Targets #
+##################
+
 run_target('clear-test-results',
 	command: meson.source_root() + '/tools/clear_test_xml.sh'
 )
-

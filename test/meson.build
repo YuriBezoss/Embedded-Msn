@@ -69,9 +69,22 @@ libc_test_files = files(
 	'test/rand.c'
 )
 
+#######################
+# Test Compiler Flags #
+#######################
+
+libc_test_flags = c_compiler.get_supported_arguments(
+	'-Wno-unused-parameter',
+)
+
+###############
+# Test Target #
+###############
+
 libc_tests = executable('libc_test',
 	libc_test_files,
 	dependencies: [cmocka_dep, libc_native_dep],
+	c_args: libc_test_flags,
 )
 
 #############################
@@ -84,11 +97,13 @@ test('libc_tests',
 	libc_tests,
 	env: [test_output_dir])
 
-echo meson.source_root()
+run_target('libc-tests',
+	command: [libc_tests]
+)
 
 run_target('libc-tests-xml',
 	command: [
-		meson.source_root() + '/tools/libc_tests_xml.sh',
+		meson.source_root() + '/tools/exec_program_with_env.sh',
 		libc_tests,
 		test_output_dir
 	],
