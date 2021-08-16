@@ -83,8 +83,9 @@ libc_test_flags = c_compiler.get_supported_arguments(
 
 libc_tests = executable('libc_test',
 	libc_test_files,
-	dependencies: [cmocka_dep, libc_native_dep],
+	dependencies: [cmocka_native_dep, libc_native_dep],
 	c_args: libc_test_flags,
+	native: true
 )
 
 #############################

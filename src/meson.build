@@ -248,8 +248,15 @@ libc_compile_flags = c_compiler.get_supported_arguments(
 	'-nostdinc', # Don't include standard include paths - we don't want system headers
 )
 
+if disable_builtins
+	libc_compile_flags += c_compiler.get_supported_arguments('-fno-builtin')
+endif
+
+if disable_stack_protection
+	libc_compile_flags += c_compiler.get_supported_arguments('-fno-stack-protector')
+endif
+
 if disable_unimplemented_apis
-	# Note: This needs to be set for both libc compilation + dependency compile_args
 	libc_compile_flags += '-DDISABLE_UNIMPLEMENTED_LIBC_APIS'
 endif
 
@@ -270,7 +277,8 @@ libc_native = static_library(
 	libc_common_files + libc_native_files,
 	c_args: libc_compile_flags,
 	include_directories: [libc_includes, arch_specific_includes],
-	dependencies: [libprintf_dep, openlibm_dep],
+	dependencies: [libprintf_native_dep, openlibm_dep],
+	native: true
 )
 
 libc_native_dep = declare_dependency(

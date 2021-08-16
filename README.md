@@ -69,3 +69,5 @@ ninja -C buildresults test
 Seeing the Configuration Settings for a Given Build
 cd buildresults
 meson configure
+
+ninja -C buildresults clear-test-results

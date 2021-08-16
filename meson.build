@@ -1,14 +1,19 @@
 project('Embedded Artistry libc',
 	['c', 'cpp'],
 	default_options : [
-		#'warning_level=3',
+		'warning_level=3',
 		'werror=false',
-		'c_std=c11',
-		'cpp_std=c++11',
+		'debug=true',
+		'optimization=g',
+		# `build.*` options affect `native: true targets`
+		# plain options affect `native: false` targets.
+		'c_std=c11', 'build.c_std=c11',
+		'cpp_std=c++11', 'build.cpp_std=c++11',
 	],
 	license: 'MIT',
 	meson_version: '>=0.52.0',
-	version: '1.0')
+	version: '1.0'
+)
 
 ################################
 # Project Options and Settings #
@@ -18,15 +23,20 @@ c_compiler = meson.get_compiler('c')
 
 disable_unimplemented_apis = get_option('hide-unimplemented-libc-apis')
 enable_gnu_src = get_option('enable-gnu-extensions')
+debug = get_option('debug')
+disable_builtins = get_option('disable-builtins')
+disable_stack_protection = get_option('disable-stack-protection')
 
-## Left for demonstration purposes, removed in the next example.
-# add_project_arguments('-Wno-unused-parameter', language: 'c')
+if debug
+	add_project_arguments('-DDEBUG', '-DGDTOA_HOST_DEBUG',
+		language: ['c', 'cpp'])
+endif
 
 add_project_arguments(
 	c_compiler.get_supported_arguments(
 		'-Wno-unknown-pragmas',
 		'-Wno-nonnull',
-		'-Wno-nonnull-compare',
+		'-Wno-nonnull-compare'
 	),
 	language: 'c'
 )
@@ -44,14 +54,27 @@ libprintf = static_library(
     include_directories: libprintf_includes,
 )
 
+libprintf_native = static_library(
+	'printf_native',
+    libprintf_files,
+    include_directories: libprintf_includes,
+    native: true
+)
+
 libprintf_dep = declare_dependency(
 	include_directories: libprintf_includes,
 	link_with: libprintf,
 )
 
+libprintf_native_dep = declare_dependency(
+	include_directories: libprintf_includes,
+	link_with: libprintf_native,
+)
+
 printf_tests = executable('printf_tests',
 	sources: files('subprojects/printf/test/test_suite.cpp'),
 	include_directories: include_directories('subprojects/printf/test'),
+	native: true
 )
 
 test('printf_tests',
@@ -85,16 +108,13 @@ openlibm_dep = declare_dependency(
 # CMocka Dependency #
 #####################
 
-# Toggling between system libraries and embedded sources
-#cmocka_dep = dependency('cmocka', required: false, fallback: ['cmocka', 'cmocka_dep'])
+cmocka_native_dep = dependency('cmocka', native: true, required: false,
+	fallback: ['cmocka', 'cmocka_native_dep'])
 
-# Alternative toogling, as there are conflict between generated libc header and build-in header
-# So we use subproject instead
-#cmocka_dep = dependency('cmocka', required : false)
-#if not cmocka_dep.found()
-cmocka_proj = subproject('cmocka')
-cmocka_dep = cmocka_proj.get_variable('cmocka_dep')
-#endif
+# Uncomment if your build fails on Linux with CMocka installed due to -nostdinc,
+# and remove the line above.
+# cmocka_subproject = subproject('cmocka')
+# cmocka_native_dep = cmocka_subproject.get_variable('cmocka_native_dep')
 
 #######################
 # Process Source Tree #
