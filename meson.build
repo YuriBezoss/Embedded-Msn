@@ -19,7 +19,10 @@ project('Embedded Artistry libc',
 # Project Options and Settings #
 ################################
 
-c_compiler = meson.get_compiler('c')
+native_c_compiler = meson.get_compiler('c', native: true)
+host_c_compiler = meson.get_compiler('c', native: false)
+native_c_compiler_id = native_c_compiler.get_id()
+host_c_compiler_id = host_c_compiler.get_id()
 
 disable_unimplemented_apis = get_option('hide-unimplemented-libc-apis')
 enable_gnu_src = get_option('enable-gnu-extensions')
@@ -28,18 +31,42 @@ disable_builtins = get_option('disable-builtins')
 disable_stack_protection = get_option('disable-stack-protection')
 
 if debug
-	add_project_arguments('-DDEBUG', '-DGDTOA_HOST_DEBUG',
-		language: ['c', 'cpp'])
+	debug_flags = ['-DDEBUG']
+	add_project_arguments(debug_flags, language: ['c', 'cpp'])
+	add_project_arguments(debug_flags, language: ['c', 'cpp'], native: true)
 endif
 
+project_arguments = [
+	'-Wno-unknown-pragmas',
+	'-Wno-nonnull',
+	'-Wno-nonnull-compare'
+]
+
 add_project_arguments(
-	c_compiler.get_supported_arguments(
-		'-Wno-unknown-pragmas',
-		'-Wno-nonnull',
-		'-Wno-nonnull-compare'
-	),
+	host_c_compiler.get_supported_arguments(project_arguments),
 	language: 'c'
 )
+
+add_project_arguments(
+	native_c_compiler.get_supported_arguments(project_arguments),
+	language: 'c',
+	native: true
+)
+
+##########################
+# Architecture Detection #
+##########################
+
+build_machine_arch_path = 'arch' / build_machine.cpu_family() / 'include'
+host_machine_arch_path = 'arch' / host_machine.cpu_family() / 'include'
+
+build_machine_arch_include = include_directories(build_machine_arch_path)
+host_machine_arch_include = include_directories(host_machine_arch_path)
+
+build_machine_arch_sys_include = include_directories(build_machine_arch_path,
+	is_system: true)
+host_machine_arch_sys_include = include_directories(host_machine_arch_path,
+	is_system: true)
 
 #############################
 # Printf Dependency Targets #
@@ -48,27 +75,9 @@ add_project_arguments(
 libprintf_files = files('subprojects/printf/printf.c')
 libprintf_includes = include_directories('subprojects/printf', is_system: true)
 
-libprintf = static_library(
-	'printf',
-    libprintf_files,
-    include_directories: libprintf_includes,
-)
-
-libprintf_native = static_library(
-	'printf_native',
-    libprintf_files,
-    include_directories: libprintf_includes,
-    native: true
-)
-
-libprintf_dep = declare_dependency(
+printf_dep = declare_dependency(
 	include_directories: libprintf_includes,
-	link_with: libprintf,
-)
-
-libprintf_native_dep = declare_dependency(
-	include_directories: libprintf_includes,
-	link_with: libprintf_native,
+	sources: libprintf_files,
 )
 
 printf_tests = executable('printf_tests',
@@ -108,13 +117,18 @@ openlibm_dep = declare_dependency(
 # CMocka Dependency #
 #####################
 
-cmocka_native_dep = dependency('cmocka', native: true, required: false,
-	fallback: ['cmocka', 'cmocka_native_dep'])
+cmocka_native_dep = dependency('cmocka', native: true, fallback: ['cmocka', 'cmocka_native_dep'])
 
-# Uncomment if your build fails on Linux with CMocka installed due to -nostdinc,
-# and remove the line above.
-# cmocka_subproject = subproject('cmocka')
-# cmocka_native_dep = cmocka_subproject.get_variable('cmocka_native_dep')
+# Handle case where Linux fails to build because cmocka.h can't be found due to `-nostdinc`:
+if cmocka_native_dep.type_name() != 'internal' and \
+	false == native_c_compiler.has_header('cmocka.h',
+		args: '-nostdinc',
+		dependencies: cmocka_native_dep.partial_dependency(compile_args: true))
+
+	# Header isn't found with `-nostdinc`, even though library is: revert to subproject
+	cmocka_subproject = subproject('cmocka')
+	cmocka_native_dep = cmocka_subproject.get_variable('cmocka_native_dep')
+endif
 
 #######################
 # Process Source Tree #

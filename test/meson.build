@@ -73,7 +73,7 @@ libc_test_files = files(
 # Test Compiler Flags #
 #######################
 
-libc_test_flags = c_compiler.get_supported_arguments(
+libc_test_flags = native_c_compiler.get_supported_arguments(
 	'-Wno-unused-parameter',
 )
 
@@ -83,7 +83,7 @@ libc_test_flags = c_compiler.get_supported_arguments(
 
 libc_tests = executable('libc_test',
 	libc_test_files,
-	dependencies: [cmocka_native_dep, libc_native_dep],
+	dependencies: [cmocka_native_dep, libc_hosted_native_dep],
 	c_args: libc_test_flags,
 	native: true
 )
