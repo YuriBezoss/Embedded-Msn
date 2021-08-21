@@ -1,6 +1,6 @@
 /*
- * Copyright © 2017 Embedded Artistry LLC.
- * License: MIT. See LICENSE file for details.
+ * Copyright © 2020 Embedded Artistry LLC.
+ * See LICENSE file for licensing information.
  */
 
 // CMocka needs these
@@ -19,10 +19,6 @@ int main(void)
 
 	// Generate JUnit results
 	cmocka_set_message_output(CM_OUTPUT_XML);
-
-	overall_result |= ctype_tests();
-	overall_result |= string_tests();
-	overall_result |= stdlib_tests();
 
 	return overall_result;
 }

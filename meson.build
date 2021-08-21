@@ -1,4 +1,4 @@
-project('Embedded Artistry libc',
+project('PROJECT_NAME',
 	['c', 'cpp'],
 	default_options : [
 		'warning_level=3',
@@ -9,161 +9,71 @@ project('Embedded Artistry libc',
 		# `build.*` options affect `native: true targets`
 		# plain options affect `native: false` targets.
 		'c_std=c11', 'build.c_std=c11',
-		'cpp_std=c++11', 'build.cpp_std=c++11',
+		'cpp_std=c++17', 'build.cpp_std=c++17',
 	],
-	license: 'MIT',
 	meson_version: '>=0.52.0',
-	version: '1.0'
+	version: '0.1'
 )
 
 ################################
 # Project Options and Settings #
 ################################
 
-native_c_compiler = meson.get_compiler('c', native: true)
-host_c_compiler = meson.get_compiler('c', native: false)
-native_c_compiler_id = native_c_compiler.get_id()
-host_c_compiler_id = host_c_compiler.get_id()
+# Pick up our common compiler variables + desired_*_flags variables
+subdir('build/compiler')
+subdir('build/compiler/c')
+subdir('build/compiler/cpp')
 
-disable_unimplemented_apis = get_option('hide-unimplemented-libc-apis')
-disable_builtins = get_option('disable-builtins')
-disable_stack_protection = get_option('disable-stack-protection')
-enable_gnu_src = get_option('enable-gnu-extensions')
-debug = get_option('debug')
-
-if debug
-	debug_flags = ['-DDEBUG']
-	add_project_arguments(debug_flags, language: ['c', 'cpp'])
-	add_project_arguments(debug_flags, language: ['c', 'cpp'], native: true)
+if get_option('debug')
+	add_project_arguments('-DDEBUG',
+		language: ['c', 'cpp'])
+	add_project_arguments('-DDEBUG',
+		language: ['c', 'cpp'], native: true)
 endif
 
-project_arguments = [
-	'-Wno-unknown-pragmas',
-	'-Wno-nonnull',
-	'-Wno-nonnull-compare'
+if get_option('disable-builtins')
+	desired_common_compile_flags += '-fno-builtin'
+endif
+
+if get_option('disable-stack-protection')
+	desired_common_compile_flags += '-fno-stack-protector'
+endif
+
+if get_option('disable-rtti')
+	desired_cpp_compile_flags += '-fno-rtti'
+endif
+
+if get_option('disable-exceptions')
+	desired_cpp_compile_flags += ['-fno-exceptions', '-fno-unwind-tables']
+endif
+
+if get_option('enable-pedantic')
+	desired_common_compile_flags += '-pedantic'
+else
+	desired_common_compile_flags += '-Wno-pedantic'
+endif
+
+if get_option('enable-pedantic-error')
+	desired_common_compile_flags += '-pedantic-error'
+endif
+
+compile_settings_list = [
+	{'lang': 'c', 'compiler': host_c_compiler, 'flags': desired_c_compile_flags, 'isnative': false},
+	{'lang': 'c', 'compiler': native_c_compiler, 'flags': desired_native_c_compile_flags, 'isnative': true},
+	{'lang': 'cpp', 'compiler': host_cpp_compiler, 'flags': desired_cpp_compile_flags, 'isnative': false},
+	{'lang': 'cpp', 'compiler': native_cpp_compiler, 'flags': desired_native_cpp_compile_flags, 'isnative': true},
 ]
 
-add_project_arguments(
-	host_c_compiler.get_supported_arguments(project_arguments),
-	language: 'c'
-)
+# Process the compilation flags
+subdir('build/compiler/check-and-apply-flags')
 
-add_project_arguments(
-	native_c_compiler.get_supported_arguments(project_arguments),
-	language: 'c',
-	native: true
-)
+#################
+# Build Modules #
+#################
 
-###############################################################
-# Generate Linker Arguments and Dependencies for Linker Files #
-###############################################################
-
-linker_script_flags = []
-linker_script_deps = []
-
-foreach entry : meson.get_cross_property('linker_paths', [''])
-	if entry != ''
-		linker_script_flags += '-L' + meson.source_root() / entry
-	endif
-endforeach
-
-foreach entry : meson.get_cross_property('linker_scripts', [''])
-	if entry != ''
-		linker_script_flags += '-T' + entry
-	endif
-endforeach
-
-foreach entry : meson.get_cross_property('link_depends', [''])
-	if entry != ''
-		linker_script_deps += meson.source_root() / entry
-	endif
-endforeach
-
-###################
-# Build Templates #
-###################
-
-# This format string template can be used to declare a map file
-# with an executable when using GCC, Clang, or MSVC
-# Use it like:
-#	link_args: host_map_file.format(meson.current_build_dir() + '/libc_test')
-
-if native_c_compiler.has_link_argument('-Wl,-map,test.map')
-	native_map_file = '-Wl,-map,@0@.map'
-elif native_c_compiler.has_link_argument('-Wl,-Map,test.map')
-	native_map_file = '-Wl,-Map,@0@.map'
-else
-	warning('Native toolchain does not support Map file generation')
-	native_map_file = []
-endif
-
-
-if host_c_compiler.has_link_argument('-Wl,-Map,test.map')
-	host_map_file = '-Wl,-Map,@0@.map'
-elif host_c_compiler.has_link_argument('-Wl,-map,test.map')
-	host_map_file = '-Wl,-map,@0@.map'
-elif host_c_compiler.has_multi_link_arguments('--specs=nosys.specs', '-Wl,-Map,test.map')
-	# arm-gcc will fail the check without --specs=nosys.specs
-	host_map_file = '-Wl,-Map,@0@.map'
-else
-	warning('Host toolchain does not support Map file generation')
-	host_map_file = []
-endif
-
-
-# The map_file variable is a simplified alias to host_map_file
-map_file = host_map_file
-
-##########################
-# Architecture Detection #
-##########################
-
-subdir('arch')
-
-#############################
-# Printf Dependency Targets #
-#############################
-
-libprintf_files = files('subprojects/printf/printf.c')
-libprintf_includes = include_directories('subprojects/printf', is_system: true)
-
-printf_dep = declare_dependency(
-	include_directories: libprintf_includes,
-	sources: libprintf_files,
-)
-
-printf_tests = executable('printf_tests',
-	sources: files('subprojects/printf/test/test_suite.cpp'),
-	include_directories: include_directories('subprojects/printf/test'),
-	native: true
-)
-
-test('printf_tests',
-	printf_tests,
-	args: ['-s', '-r', 'junit', '-o', meson.build_root() + '/test/printf_tests.xml']
-)
-
-run_target('printf-tests',
-	command: printf_tests
-)
-
-run_target('printf-tests-xml',
-	command: [printf_tests, '-s', '-r', 'junit', '-o', meson.build_root() + '/test/printf_tests.xml']
-)
-
-###############################
-# Openlibm Dependency Targets #
-###############################
-
-openlibm_includes = include_directories(
-	'subprojects/openlibm/include',
-	'subprojects/openlibm/src',
-	is_system: true
-)
-
-openlibm_dep = declare_dependency(
-	include_directories: openlibm_includes,
-)
+# Include reusable build modules here via subdir() calls
+subdir('build/modules/linker-script-as-property')
+subdir('build/modules/linker-map')
 
 #####################
 # CMocka Dependency #
