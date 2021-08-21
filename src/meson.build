@@ -281,6 +281,7 @@ if native_c_compiler_id == 'clang'
 	endif
 endif
 
+
 if disable_builtins
 	libc_native_compile_flags += '-fno-builtin'
 	libc_host_compile_flags += '-fno-builtin'
@@ -329,10 +330,13 @@ libc = static_library(
 	c_args: libc_compile_flags + libc_host_compile_flags,
 	include_directories: [
 		libc_include,
-		host_machine_arch_include,
-		gdtoa_include
+		gdtoa_include,
 	],
-	dependencies: [printf_dep, openlibm_dep],
+	dependencies: [
+		printf_dep,
+		openlibm_dep,
+		host_machine_dep,
+	],
 )
 
 # We don't build the stdio files for the native variant, as we rely on the
@@ -343,10 +347,13 @@ libc_native = static_library(
 	c_args: libc_compile_flags + libc_native_compile_flags,
 	include_directories: [
 		libc_include,
-		build_machine_arch_include,
 		gdtoa_include,
 	],
-	dependencies: [printf_dep, openlibm_dep],
+	dependencies: [
+		printf_dep,
+		openlibm_dep,
+		build_machine_dep,
+	],
 	native: true
 )
 
@@ -384,7 +391,7 @@ libc_hosted_native_dep = declare_dependency(
 	include_directories: [
 		libc_sys_include,
 		gdtoa_sys_include,
-		build_machine_arch_include,
+		build_machine_arch_sys_include,
 		openlibm_includes,
 		libprintf_includes
 	],

@@ -25,10 +25,10 @@ native_c_compiler_id = native_c_compiler.get_id()
 host_c_compiler_id = host_c_compiler.get_id()
 
 disable_unimplemented_apis = get_option('hide-unimplemented-libc-apis')
-enable_gnu_src = get_option('enable-gnu-extensions')
-debug = get_option('debug')
 disable_builtins = get_option('disable-builtins')
 disable_stack_protection = get_option('disable-stack-protection')
+enable_gnu_src = get_option('enable-gnu-extensions')
+debug = get_option('debug')
 
 if debug
 	debug_flags = ['-DDEBUG']
@@ -53,20 +53,46 @@ add_project_arguments(
 	native: true
 )
 
+###################
+# Build Templates #
+###################
+
+# This format string template can be used to declare a map file
+# with an executable when using GCC, Clang, or MSVC
+# Use it like:
+#	link_args: host_map_file.format(meson.current_build_dir() + '/libc_test')
+
+if native_c_compiler.has_link_argument('-Wl,-map,test.map')
+	native_map_file = '-Wl,-map,@0@.map'
+elif native_c_compiler.has_link_argument('-Wl,-Map,test.map')
+	native_map_file = '-Wl,-Map,@0@.map'
+else
+	warning('Native toolchain does not support Map file generation')
+	native_map_file = []
+endif
+
+
+if host_c_compiler.has_link_argument('-Wl,-Map,test.map')
+	host_map_file = '-Wl,-Map,@0@.map'
+elif host_c_compiler.has_link_argument('-Wl,-map,test.map')
+	host_map_file = '-Wl,-map,@0@.map'
+elif host_c_compiler.has_multi_link_arguments('--specs=nosys.specs', '-Wl,-Map,test.map')
+	# arm-gcc will fail the check without --specs=nosys.specs
+	host_map_file = '-Wl,-Map,@0@.map'
+else
+	warning('Host toolchain does not support Map file generation')
+	host_map_file = []
+endif
+
+
+# The map_file variable is a simplified alias to host_map_file
+map_file = host_map_file
+
 ##########################
 # Architecture Detection #
 ##########################
 
-build_machine_arch_path = 'arch' / build_machine.cpu_family() / 'include'
-host_machine_arch_path = 'arch' / host_machine.cpu_family() / 'include'
-
-build_machine_arch_include = include_directories(build_machine_arch_path)
-host_machine_arch_include = include_directories(host_machine_arch_path)
-
-build_machine_arch_sys_include = include_directories(build_machine_arch_path,
-	is_system: true)
-host_machine_arch_sys_include = include_directories(host_machine_arch_path,
-	is_system: true)
+subdir('arch')
 
 #############################
 # Printf Dependency Targets #
