@@ -97,6 +97,7 @@ else
 	native_map_file = []
 endif
 
+
 if host_c_compiler.has_link_argument('-Wl,-Map,test.map')
 	host_map_file = '-Wl,-Map,@0@.map'
 elif host_c_compiler.has_link_argument('-Wl,-map,test.map')
@@ -108,6 +109,7 @@ else
 	warning('Host toolchain does not support Map file generation')
 	host_map_file = []
 endif
+
 
 # The map_file variable is a simplified alias to host_map_file
 map_file = host_map_file
