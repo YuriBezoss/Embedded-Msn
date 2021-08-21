@@ -81,9 +81,11 @@ libc_test_flags = native_c_compiler.get_supported_arguments(
 # Test Target #
 ###############
 
+## Subproject Example
 libc_tests = executable('libc_test',
 	libc_test_files,
-	dependencies: [cmocka_native_dep, libc_hosted_native_dep],
+	dependencies: [cmocka_native_dep, libc_native_dep],
+	link_args: native_map_file.format(meson.current_build_dir() + '/libc_test'),
 	c_args: libc_test_flags,
 	native: true
 )

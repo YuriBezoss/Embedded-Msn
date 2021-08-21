@@ -281,6 +281,7 @@ if native_c_compiler_id == 'clang'
 	endif
 endif
 
+
 if disable_builtins
 	libc_native_compile_flags += '-fno-builtin'
 	libc_host_compile_flags += '-fno-builtin'
