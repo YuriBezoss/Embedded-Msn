@@ -3,8 +3,9 @@ project('Embedded Artistry libc',
 	default_options : [
 		'warning_level=3',
 		'werror=false',
-		'debug=true',
-		'optimization=g',
+		# This project defaults to a release build
+		'debug=false',
+		'optimization=2',
 		# `build.*` options affect `native: true targets`
 		# plain options affect `native: false` targets.
 		'c_std=c11', 'build.c_std=c11',
@@ -52,6 +53,7 @@ add_project_arguments(
 	language: 'c',
 	native: true
 )
+
 ###############################################################
 # Generate Linker Arguments and Dependencies for Linker Files #
 ###############################################################
