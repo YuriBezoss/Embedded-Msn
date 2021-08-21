@@ -103,11 +103,10 @@ if meson.is_cross_build()
 		'app/main.c',
 		dependencies: libc_dep,
 		link_args: [
-			'-TSTM32F103VBIx_FLASH.ld',
-			'-L' + meson.current_source_dir() + '/app',
+			linker_script_flags,
 			map_file.format(meson.current_build_dir()+'/sample_app'),
 		],
-		link_depends: files('app/STM32F103VBIx_FLASH.ld'),
+		link_depends: linker_script_deps,
 		native: false
 	)
 
