@@ -101,6 +101,26 @@ scan-build: $(CONFIGURED_BUILD_DEP)
 tidy: $(CONFIGURED_BUILD_DEP)
 	$(Q) ninja -C $(BUILDRESULTS) clang-tidy
 
+.PHONY: sloccount
+sloccount: $(CONFIGURED_BUILD_DEP)
+	$(Q) ninja -C $(BUILDRESULTS) sloccount
+
+.PHONY: sloccount-full
+sloccount-full: $(CONFIGURED_BUILD_DEP)
+	$(Q) ninja -C $(BUILDRESULTS) sloccount-full
+
+.PHONY: sloccount-report
+sloccount-report: $(CONFIGURED_BUILD_DEP)
+	$(Q) ninja -C $(BUILDRESULTS) sloccount-report
+
+.PHONY: sloccount-full-report
+sloccount-full-report: $(CONFIGURED_BUILD_DEP)
+	$(Q) ninja -C $(BUILDRESULTS) sloccount-full-report
+
+.PHONY: vale
+vale: $(CONFIGURED_BUILD_DEP)
+	$(Q) ninja -C $(BUILDRESULTS) vale
+
 .PHONY: coverage
 coverage:
 	$(Q)if [ ! -e "$(BUILDRESULTS)/coverage/build.ninja" ]; then meson $(BUILDRESULTS)/coverage $(INTERNAL_OPTIONS) $(OPTIONS) -Db_coverage=true; fi
@@ -165,6 +185,12 @@ help :
 	@echo "    complexity-full: runs complexity analysis with lizard, prints full report"
 	@echo "    complexity-xml: runs complexity analysis with lizard, generates XML report"
 	@echo "        (for build servers)"
+	@echo "	   sloccount: Run line of code and effort analysis"
+	@echo "	   sloccount-full: Run line of code and effort analysis, with results for every file"
+	@echo "	   sloccount-report: Run line of code and effort analysis + save to file for Jenkins"
+	@echo "	   sloccount-full-report: Run line of code and effort analysis, with results for every file."
+	@echo "        Save output to a file for Jenkins"
 	@echo "    coverage: runs code coverage analysis and generates an HTML & XML reports"
 	@echo "    tidy: runs clang-tidy linter"
+	@echo "    vale: lints project documentation against configured style guide"
 

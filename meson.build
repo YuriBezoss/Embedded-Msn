@@ -63,6 +63,12 @@ compile_settings_list = [
 	{'lang': 'cpp', 'flags': desired_cpp_compile_flags, 'isnative': false},
 	{'lang': 'cpp', 'flags': desired_native_cpp_compile_flags, 'isnative': true},
 ]
+link_settings_list = [
+	{'lang': 'c', 'flags': [], 'isnative': false},
+	{'lang': 'c','flags': [], 'isnative': true},
+	{'lang': 'cpp', 'flags': [], 'isnative': false},
+	{'lang': 'cpp', 'flags': [], 'isnative': true},
+]
 
 # Process the compilation flags
 subdir('build/compiler/check-and-apply-flags')
@@ -77,15 +83,32 @@ subdir('build/linker/linker-map')
 subdir('build/test/cmocka')
 subdir('build/objcopy')
 
+###############
+# Subprojects #
+###############
+
+libmemory_subproject = subproject('libmemory')
+etl_subproject = subproject('etl')
+
+libmemory_freelist_dep = libmemory_subproject.get_variable('libmemory_freelist_dep')
+etl_dep = etl_subproject.get_variable('etl_dep')
+
+# Configure the project to include `libc` headers by default
 #######################
 # Process Source Tree #
 #######################
 
 # Add files to this variable if you want them analyzed by clang-tidy
 clangtidy_files = []
+# Add dependencies to this array for testing with Catch2
+catch2_tests_dep = []
 
 subdir('src')
 subdir('test')
+
+# Defined after src and test so catch2_dep is fully populated
+# when creating the built-in targets
+subdir('build/test/catch2')
 
 ###################
 # Tooling Modules #
@@ -94,6 +117,8 @@ subdir('test')
 subdir('build/analysis/clang-tidy')
 subdir('build/analysis/complexity')
 subdir('build/analysis/cppcheck')
+subdir('build/analysis/sloccount')
+subdir('build/analysis/vale')
 subdir('build/format')
 subdir('build/docs/doxygen')
 
@@ -115,7 +140,7 @@ host_pkg_files = [
 ]
 
 native_pkg_files = [
-	build_root_include.format('doc'),
+	build_root_include.format('docs'),
 	app_include.format('APP_native')
 ]
 

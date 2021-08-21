@@ -26,6 +26,24 @@ cppcheck_default_paths = [
 	meson.source_root() / 'test',
 ]
 
+cppcheck_default_custom_rules = [
+	meson.current_source_dir() / 'cppcheck-rules/BitwiseOperatorInConditional/rule.xml',
+	meson.current_source_dir() / 'cppcheck-rules/CollapsibleIfStatements/rule.xml',
+	meson.current_source_dir() / 'cppcheck-rules/EmptyElseBlock/rule.xml',
+	meson.current_source_dir() / 'cppcheck-rules/EmptyCatchStatement/rule.xml',
+	meson.current_source_dir() / 'cppcheck-rules/EmptyDoWhileStatement/rule.xml',
+	meson.current_source_dir() / 'cppcheck-rules/EmptyForStatement/rule.xml',
+	meson.current_source_dir() / 'cppcheck-rules/EmptyIfStatement/rule.xml',
+	meson.current_source_dir() / 'cppcheck-rules/EmptySwitchStatement/rule.xml',
+	meson.current_source_dir() / 'cppcheck-rules/ForLoopShouldBeWhileLoop/rule.xml',
+	meson.current_source_dir() / 'cppcheck-rules/InvertedLogic/rule.xml',
+	meson.current_source_dir() / 'cppcheck-rules/MultipleUnaryOperator/rule.xml',
+	meson.current_source_dir() / 'cppcheck-rules/RedundantConditionalOperator/rule.xml',
+	meson.current_source_dir() / 'cppcheck-rules/RedundantIfStatement/rule.xml',
+	meson.current_source_dir() / 'cppcheck-rules/UnnecessaryElseStatement/rule.xml',
+	meson.current_source_dir() / 'cppcheck-rules/UseStlAlgorithm/rule.xml',
+]
+
 cppcheck_paths = get_variable('cppcheck_paths', cppcheck_default_paths)
 cppcheck_additional_paths = get_variable('cppcheck_additional_paths', [])
 
@@ -56,7 +74,9 @@ else
 endif
 
 # Custom rules to use
-cppcheck_custom_rules = get_variable('cppcheck_custom_rules', [])
+cppcheck_custom_rules = get_variable('cppcheck_custom_rules', cppcheck_default_custom_rules)
+# Add additional rules to the default list
+cppcheck_custom_rules += get_variable('cppcheck_additional_custom_rules', [])
 if cppcheck_custom_rules.length() > 0
 	cppcheck_custom_rules_processed = ''
 	foreach entry : cppcheck_custom_rules
@@ -120,3 +140,4 @@ if cppcheck.found()
 		],
 	)
 endif
+
