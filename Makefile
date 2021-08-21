@@ -10,7 +10,6 @@ export VERBOSE := 0
 endif
 
 BUILDRESULTS ?= buildresults
-SUBPROJECT_DEP = subprojects/printf
 CONFIGURED_BUILD_DEP = $(BUILDRESULTS)/build.ninja
 
 # Override to provide your own settings to the shim
@@ -71,12 +70,8 @@ reconfig:
 	$(Q) meson $(BUILDRESULTS) --reconfigure $(INTERNAL_OPTIONS) $(OPTIONS)
 
 # Runs whenever the build has not been configured successfully
-$(CONFIGURED_BUILD_DEP): | $(SUBPROJECT_DEP)
+$(CONFIGURED_BUILD_DEP):
 	$(Q) meson $(BUILDRESULTS) $(INTERNAL_OPTIONS) $(OPTIONS)
-
-# This prerequisite will download subprojects if they don't exist
-$(SUBPROJECT_DEP):
-	$(Q) meson subprojects download
 
 .PHONY: cppcheck
 cppcheck: | $(CONFIGURED_BUILD_DEP)

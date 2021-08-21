@@ -2,7 +2,7 @@ APP_sources = [
 	'main.c'
 ]
 
-executable('APP',
+APP = executable('APP',
 	APP_sources,
 	dependencies: [
 		utility_dep,
@@ -19,5 +19,23 @@ executable('APP_native',
 	],
 	install: false,
 	native: true
+)
+
+#############################
+# Output Conversion Targets #
+#############################
+
+APP_hex = custom_target('APP.hex',
+	input: APP,
+	output: 'APP.hex',
+	command: host_hex_conversion,
+	build_by_default: true
+)
+
+APP_hex = custom_target('APP.bin',
+	input: APP,
+	output: 'APP.bin',
+	command: host_bin_conversion,
+	build_by_default: true
 )
 

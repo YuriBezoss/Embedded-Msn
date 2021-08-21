@@ -65,7 +65,7 @@ else
 fi
 
 cd ${MESON_SOURCE_ROOT}
-eval find ${DIRS} ${EXCLUDES} -type f ${FILE_TYPES} \
+eval find ${DIRS[@]} ${EXCLUDES} -type f ${FILE_TYPES} \
 	| xargs clang-format -style=file -i -fallback-style=none
 
 if [ "$PATCH" == '1' ]; then

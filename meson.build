@@ -11,7 +11,7 @@ project('PROJECT_NAME',
 		'c_std=c11', 'build.c_std=c11',
 		'cpp_std=c++17', 'build.cpp_std=c++17',
 	],
-	meson_version: '>=0.52.0',
+	meson_version: '>=0.54.0',
 	version: '0.1'
 )
 
@@ -75,6 +75,7 @@ subdir('build/compiler/check-and-apply-flags')
 subdir('build/linker/linker-script-as-property')
 subdir('build/linker/linker-map')
 subdir('build/test/cmocka')
+subdir('build/objcopy')
 
 #######################
 # Process Source Tree #
@@ -94,6 +95,7 @@ subdir('build/analysis/clang-tidy')
 subdir('build/analysis/complexity')
 subdir('build/analysis/cppcheck')
 subdir('build/format')
+subdir('build/docs/doxygen')
 
 #############
 # Packaging #
@@ -113,17 +115,9 @@ host_pkg_files = [
 ]
 
 native_pkg_files = [
-	build_root_include.format('docs'),
+	build_root_include.format('doc'),
 	app_include.format('APP_native')
 ]
 
 # Invoke the package module
 subdir('build/package')
-
-##################
-# Custom Targets #
-##################
-
-doxygen = find_program('doxygen', required: false, disabler: true)
-run_target('docs',
-	command: [doxygen, 'docs/Doxyfile'])
