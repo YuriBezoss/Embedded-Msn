@@ -69,6 +69,8 @@ libc_test_files = files(
 	'test/rand.c'
 )
 
+files_to_lint += libc_test_files
+
 #######################
 # Test Compiler Flags #
 #######################
@@ -84,11 +86,51 @@ libc_test_flags = native_c_compiler.get_supported_arguments(
 ## Subproject Example
 libc_tests = executable('libc_test',
 	libc_test_files,
-	dependencies: [cmocka_native_dep, libc_native_dep],
+	dependencies: [cmocka_native_dep, libc_hosted_native_dep],
 	link_args: native_map_file.format(meson.current_build_dir() + '/libc_test'),
 	c_args: libc_test_flags,
 	native: true
 )
+
+################################
+# Cross Compilation "Test" App #
+################################
+# This application is used to confirm linking behavior, primarily for cross builds
+
+if meson.is_cross_build()
+
+	host_objcopy = find_program(meson.get_cross_property('objcopy'),
+		required: false, disabler: true)
+
+	if host_objcopy.found() == false
+		message('Specified objcopy not found, .hex and .bin conversion is disabled.')
+	endif
+
+	sample_app = executable('sample_app',
+		'app/main.c',
+		dependencies: libc_dep,
+		link_args: [
+			linker_script_flags,
+			map_file.format(meson.current_build_dir()+'/sample_app'),
+		],
+		link_depends: linker_script_deps,
+		native: false
+	)
+
+	sample_app_hex = custom_target('sample_app.hex',
+		input: sample_app,
+		output: 'sample_app.hex',
+		command: [host_objcopy, '-O', 'ihex', '@INPUT@', '@OUTPUT@'],
+		build_by_default: true
+	)
+
+	sample_app_bin = custom_target('sample_app.bin',
+		input: sample_app,
+		output: 'sample_app.bin',
+		command: [host_objcopy, '-O', 'binary', '@INPUT@', '@OUTPUT@'],
+		build_by_default: true
+	)
+endif
 
 #############################
 # Register Tests with Meson #

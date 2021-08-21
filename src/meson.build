@@ -231,6 +231,8 @@ libc_standalone_files = [
 	crt_files,
 ]
 
+files_to_lint += [libc_common_files, libc_standalone_files]
+
 libc_include = include_directories('../include')
 libc_sys_include = include_directories('../include', is_system: true)
 
@@ -276,7 +278,8 @@ if native_c_compiler_id == 'clang'
 	libc_native_link_flags += '-nostdlib'
 
 	# We can't do this for Linux, because we need the GCC startup files (for now)
-	if build_machine.system() != 'linux'
+	# This flag will break sanitizer support for tests, so we will check for the option too.
+	if build_machine.system() != 'linux' and get_option('b_sanitize') == 'none' and get_option('b_sanitize') == 'none'
 		libc_hosted_native_link_flags += '-nostdlib'
 	endif
 endif
@@ -330,10 +333,13 @@ libc = static_library(
 	c_args: libc_compile_flags + libc_host_compile_flags,
 	include_directories: [
 		libc_include,
-		host_machine_arch_include,
-		gdtoa_include
+		gdtoa_include,
 	],
-	dependencies: [printf_dep, openlibm_dep],
+	dependencies: [
+		printf_dep,
+		openlibm_dep,
+		host_machine_dep,
+	],
 )
 
 # We don't build the stdio files for the native variant, as we rely on the
@@ -344,10 +350,13 @@ libc_native = static_library(
 	c_args: libc_compile_flags + libc_native_compile_flags,
 	include_directories: [
 		libc_include,
-		build_machine_arch_include,
 		gdtoa_include,
 	],
-	dependencies: [printf_dep, openlibm_dep],
+	dependencies: [
+		printf_dep,
+		openlibm_dep,
+		build_machine_dep,
+	],
 	native: true
 )
 
@@ -385,7 +394,7 @@ libc_hosted_native_dep = declare_dependency(
 	include_directories: [
 		libc_sys_include,
 		gdtoa_sys_include,
-		build_machine_arch_include,
+		build_machine_arch_sys_include,
 		openlibm_includes,
 		libprintf_includes
 	],

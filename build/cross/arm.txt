@@ -12,7 +12,7 @@ ar = 'arm-none-eabi-gcc-ar'
 strip = 'arm-none-eabi-strip'
 
 [properties]
-
+objcopy = 'arm-none-eabi-objcopy'
 # Keep this set, or the sanity check won't pass
 needs_exe_wrapper = true
 

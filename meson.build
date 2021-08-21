@@ -53,6 +53,31 @@ add_project_arguments(
 	native: true
 )
 
+###############################################################
+# Generate Linker Arguments and Dependencies for Linker Files #
+###############################################################
+
+linker_script_flags = []
+linker_script_deps = []
+
+foreach entry : meson.get_cross_property('linker_paths', [''])
+	if entry != ''
+		linker_script_flags += '-L' + meson.source_root() / entry
+	endif
+endforeach
+
+foreach entry : meson.get_cross_property('linker_scripts', [''])
+	if entry != ''
+		linker_script_flags += '-T' + entry
+	endif
+endforeach
+
+foreach entry : meson.get_cross_property('link_depends', [''])
+	if entry != ''
+		linker_script_deps += meson.source_root() / entry
+	endif
+endforeach
+
 ###################
 # Build Templates #
 ###################
@@ -92,17 +117,7 @@ map_file = host_map_file
 # Architecture Detection #
 ##########################
 
-arch_include_template = 'arch/@0@/include'
-build_machine_arch_path = arch_include_template.format(build_machine.cpu_family())
-host_machine_arch_path = arch_include_template.format(host_machine.cpu_family())
-
-build_machine_arch_include = include_directories(build_machine_arch_path)
-host_machine_arch_include = include_directories(host_machine_arch_path)
-
-build_machine_arch_sys_include = include_directories(build_machine_arch_path,
-	is_system: true)
-host_machine_arch_sys_include = include_directories(host_machine_arch_path,
-	is_system: true)
+subdir('arch')
 
 #############################
 # Printf Dependency Targets #
@@ -170,6 +185,9 @@ endif
 # Process Source Tree #
 #######################
 
+# Add files to this variable if you want them analyzed by clang-tidy
+files_to_lint = []
+
 subdir('src')
 subdir('test')
 
@@ -180,3 +198,105 @@ subdir('test')
 run_target('clear-test-results',
 	command: meson.source_root() + '/tools/clear_test_xml.sh'
 )
+
+doxygen = find_program('doxygen', required: false, disabler: true)
+run_target('docs',
+	command: [doxygen, 'docs/Doxyfile'])
+
+clangformat = find_program('clang-format', required: false, disabler: true)
+if clangformat.found()
+	run_target('format',
+		command: 'tools/format.sh')
+
+	run_target('format-patch',
+		command: 'tools/format-patch.sh')
+endif
+
+cppcheck = find_program('cppcheck', required: false, disabler: true)
+if cppcheck.found()
+	run_target('cppcheck',
+		command: 'tools/cppcheck.sh'
+	)
+
+	run_target('cppcheck-xml',
+		command: [
+			'tools/cppcheck.sh',
+			'xml'
+		],
+	)
+endif
+
+clangtidy = find_program('clang-tidy', required: false, disabler: true)
+if clangtidy.found()
+	run_target('clang-tidy',
+		command: [
+			'tools/clang-tidy.sh',
+			# Files,
+			files_to_lint
+		],
+	)
+endif
+
+lizard_default_args = [
+	# Exclude these Directories
+	'-x', './buildresults/*',
+	'-x', './subprojects/*',
+	# Configuration
+	'--length', '75', # Fail when functions are longer than this
+	'--CCN', '10', # Fail over this CCN
+	'--arguments', '10', # Fail at this arg count
+]
+
+lizard = find_program('lizard', required: false, disabler: true)
+run_target('complexity',
+	command: [lizard,
+		lizard_default_args,
+		'-w'
+	]
+)
+
+run_target('complexity-full',
+	command: [lizard,
+		lizard_default_args
+	]
+)
+
+complexity_xml = custom_target('complexity.xml',
+	output: 'complexity.xml',
+	command: [
+		lizard,
+		lizard_default_args,
+		'--xml'
+	],
+	capture: true,
+	build_always_stale: true,
+	build_by_default: false,
+)
+
+alias_target('complexity-xml', complexity_xml)
+
+#############
+# Packaging #
+#############
+
+run_target('package',
+	command: [
+		'tools/package.sh',
+		'-a', host_machine.cpu_family(),
+		'-c', host_machine.cpu(),
+		'-s', host_machine.system(),
+		'-v', meson.project_version()
+	]
+)
+
+run_target('package-native',
+	command: [
+		'tools/package.sh',
+		'-a', build_machine.cpu_family(),
+		'-c', build_machine.cpu(),
+		'-s', build_machine.system(),
+		'-v', meson.project_version(),
+		'-n' # Use Native Files
+	]
+)
+
