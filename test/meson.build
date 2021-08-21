@@ -5,7 +5,7 @@ PROJECT_test_files = files(
 	'test_suite.c',
 )
 
-files_to_lint += PROJECT_test_files
+clangtidy_files += PROJECT_test_files
 
 #######################
 # Test Compiler Flags #
@@ -35,11 +35,9 @@ PROJECT_tests = executable('PROJECT_tests',
 
 # CMocka Test Suite #
 
-test_output_dir = 'CMOCKA_XML_FILE=' + meson.build_root() + '/test/%g.xml'
-
 test('PROJECT_tests',
 	PROJECT_tests,
-	env: [test_output_dir])
+	env: [cmocka_test_output_dir])
 
 run_target('PROJECT-tests',
 	command: [PROJECT_tests]
@@ -47,8 +45,8 @@ run_target('PROJECT-tests',
 
 run_target('PROJECT-tests-xml',
 	command: [
-		meson.source_root() + '/tools/exec_program_with_env.sh',
+		cmocka_with_env_script,
 		PROJECT_tests,
-		test_output_dir
+		cmocka_test_output_dir
 	],
 )

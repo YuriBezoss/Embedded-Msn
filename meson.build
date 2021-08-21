@@ -58,10 +58,10 @@ if get_option('enable-pedantic-error')
 endif
 
 compile_settings_list = [
-	{'lang': 'c', 'compiler': host_c_compiler, 'flags': desired_c_compile_flags, 'isnative': false},
-	{'lang': 'c', 'compiler': native_c_compiler, 'flags': desired_native_c_compile_flags, 'isnative': true},
-	{'lang': 'cpp', 'compiler': host_cpp_compiler, 'flags': desired_cpp_compile_flags, 'isnative': false},
-	{'lang': 'cpp', 'compiler': native_cpp_compiler, 'flags': desired_native_cpp_compile_flags, 'isnative': true},
+	{'lang': 'c', 'flags': desired_c_compile_flags, 'isnative': false},
+	{'lang': 'c', 'flags': desired_native_c_compile_flags, 'isnative': true},
+	{'lang': 'cpp', 'flags': desired_cpp_compile_flags, 'isnative': false},
+	{'lang': 'cpp', 'flags': desired_native_cpp_compile_flags, 'isnative': true},
 ]
 
 # Process the compilation flags
@@ -72,142 +72,58 @@ subdir('build/compiler/check-and-apply-flags')
 #################
 
 # Include reusable build modules here via subdir() calls
-subdir('build/modules/linker-script-as-property')
-subdir('build/modules/linker-map')
-
-#####################
-# CMocka Dependency #
-#####################
-
-cmocka_native_dep = dependency('cmocka', native: true, fallback: ['cmocka', 'cmocka_native_dep'])
-
-# Handle case where Linux fails to build because cmocka.h can't be found due to `-nostdinc`:
-if cmocka_native_dep.type_name() != 'internal' and \
-	false == native_c_compiler.has_header('cmocka.h',
-		args: '-nostdinc',
-		dependencies: cmocka_native_dep.partial_dependency(compile_args: true))
-
-	# Header isn't found with `-nostdinc`, even though library is: revert to subproject
-	cmocka_subproject = subproject('cmocka')
-	cmocka_native_dep = cmocka_subproject.get_variable('cmocka_native_dep')
-endif
+subdir('build/linker/linker-script-as-property')
+subdir('build/linker/linker-map')
+subdir('build/test/cmocka')
 
 #######################
 # Process Source Tree #
 #######################
 
 # Add files to this variable if you want them analyzed by clang-tidy
-files_to_lint = []
+clangtidy_files = []
 
 subdir('src')
 subdir('test')
 
-##################
-# Custom Targets #
-##################
+###################
+# Tooling Modules #
+###################
 
-run_target('clear-test-results',
-	command: meson.source_root() + '/tools/clear_test_xml.sh'
-)
-
-doxygen = find_program('doxygen', required: false, disabler: true)
-run_target('docs',
-	command: [doxygen, 'docs/Doxyfile'])
-
-clangformat = find_program('clang-format', required: false, disabler: true)
-if clangformat.found()
-	run_target('format',
-		command: 'tools/format.sh')
-
-	run_target('format-patch',
-		command: 'tools/format-patch.sh')
-endif
-
-cppcheck = find_program('cppcheck', required: false, disabler: true)
-if cppcheck.found()
-	run_target('cppcheck',
-		command: 'tools/cppcheck.sh'
-	)
-
-	run_target('cppcheck-xml',
-		command: [
-			'tools/cppcheck.sh',
-			'xml'
-		],
-	)
-endif
-
-clangtidy = find_program('clang-tidy', required: false, disabler: true)
-if clangtidy.found()
-	run_target('clang-tidy',
-		command: [
-			'tools/clang-tidy.sh',
-			# Files,
-			files_to_lint
-		],
-	)
-endif
-
-lizard_default_args = [
-	# Exclude these Directories
-	'-x', './buildresults/*',
-	'-x', './subprojects/*',
-	# Configuration
-	'--length', '75', # Fail when functions are longer than this
-	'--CCN', '10', # Fail over this CCN
-	'--arguments', '10', # Fail at this arg count
-]
-
-lizard = find_program('lizard', required: false, disabler: true)
-run_target('complexity',
-	command: [lizard,
-		lizard_default_args,
-		'-w'
-	]
-)
-
-run_target('complexity-full',
-	command: [lizard,
-		lizard_default_args
-	]
-)
-
-complexity_xml = custom_target('complexity.xml',
-	output: 'complexity.xml',
-	command: [
-		lizard,
-		lizard_default_args,
-		'--xml'
-	],
-	capture: true,
-	build_always_stale: true,
-	build_by_default: false,
-)
-
-alias_target('complexity-xml', complexity_xml)
+subdir('build/analysis/clang-tidy')
+subdir('build/analysis/complexity')
+subdir('build/analysis/cppcheck')
+subdir('build/format')
 
 #############
 # Packaging #
 #############
 
-run_target('package',
-	command: [
-		'tools/package.sh',
-		'-a', host_machine.cpu_family(),
-		'-c', host_machine.cpu(),
-		'-s', host_machine.system(),
-		'-v', meson.project_version()
-	]
-)
+# These macros allow you to simplify the declaration of includes for common
+# include paths. Examples:
+#	build_root_include.format('doc'),
+#	app_include.format('APP')
+build_root_include = meson.build_root() + ':@0@'
+app_include = meson.build_root() / 'src/app:@0@'
+lib_include = meson.build_root() / 'src/lib:@0@'
 
-run_target('package-native',
-	command: [
-		'tools/package.sh',
-		'-a', build_machine.cpu_family(),
-		'-c', build_machine.cpu(),
-		'-s', build_machine.system(),
-		'-v', meson.project_version(),
-		'-n' # Use Native Files
-	]
-)
+host_pkg_files = [
+	build_root_include.format('docs'),
+	app_include.format('APP')
+]
 
+native_pkg_files = [
+	build_root_include.format('docs'),
+	app_include.format('APP_native')
+]
+
+# Invoke the package module
+subdir('build/package')
+
+##################
+# Custom Targets #
+##################
+
+doxygen = find_program('doxygen', required: false, disabler: true)
+run_target('docs',
+	command: [doxygen, 'docs/Doxyfile'])

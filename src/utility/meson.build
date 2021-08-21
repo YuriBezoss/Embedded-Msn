@@ -6,7 +6,7 @@ utility_sources = [
     files('example.c')
 ]
 
-files_to_lint += [
+clangtidy_files += [
 	utility_sources,
 	# Add header-only files here if you want them linted
 ]
