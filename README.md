@@ -1,73 +1,170 @@
-# Set up
+# Project Title
 
-Install Meson
-- sudo apt install python3 python3-pip
-- pip3 install meson
-- sudo apt install ninja-build
+Provide an introductory paragraph, describing:
 
-GCC
-- sudo apt install build-essential
-- sudo apt install gcc binutils
+* What your project does
+* Why people should consider using your project
+* Link to project home page
 
-Clang
-- sudo apt-get install clang lld llvm clang-tools
+## Table of Contents
 
-CMocka
-- sudo apt install libcmocka0 libcmocka-dev
+1. [About the Project](#about-the-project)
+1. [Project Status](#project-status)
+1. [Getting Started](#getting-started)
+    1. [Dependencies](#dependencies)
+    1. [Building](#building)
+    1. [Installation](#installation)
+    1. [Usage](#usage)
+1. [Release Process](#release-process)
+    1. [Versioning](#versioning)
+    1. [Payload](#payload)
+1. [How to Get Help](#how-to-get-help)
+1. [Further Reading](#further-reading)
+1. [Contributing](#contributing)
+1. [License](#license)
+1. [Authors](#authors)
+1. [Acknowledgments](#acknowledgements)
 
-Make
-- sudo apt install make
+# About the Project
 
-pkg-config
-- sudo apt install pkg-config
+Here you can provide more details about the project
+* What features does your project provide?
+* Short motivation for the project? (Don't be too long winded)
+* Links to the project site
 
-Supporting Tooling
+```
+Show some example code to describe what your project does
+Show some of your APIs
+```
 
-    Doxygen
-    CppCheck
-    clang-format
-    clang-tidy
-    gcovr
-    lcov
-    genhtml
-    scan-build (Clang)
-    lizard
-- sudo apt install doxygen cppcheck gcovr lcov clang-format clang-tidy clang-tools
+**[Back to top](#table-of-contents)**
 
-## External Dependencies
+# Project Status
 
-- [Cmocka](https://cmocka.org/)
-- [juliamath/openlibm](https://github.com/JuliaMath/openlibm)
-- [mpaland/printf](https://github.com/mpaland/printf)
+Show the build status if you have a CI server:
 
-## Rebuild entire directory
-This will clean the build dir:
+[![Build Status](http://your-server:12345/job/badge/icon)](http://your-server:12345/job/http://your-server:12345/job/badge/icon/)
 
-$ ninja -C builddir clean
+Describe the current release and any notes about the current state of the project. Examples: currently compiles on your host machine, but is not cross-compiling for ARM, APIs are not set, feature not implemented, etc.
 
-This will force a reconfigure:
+**[Back to top](#table-of-contents)**
 
-$ ninja -C builddir reconfigure
+# Getting Started
 
-But you may also just as well nuke the entire builddir and just do a
-fresh meson build from scratch:
+This section should provide instructions for other developers to
 
-$ [delete buildresults]
-$ meson buildresults
-$ ninja -C buildresults 
+These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. See deployment for notes on how to deploy the project on a live system.
 
-Building from the source
-meson compile -C builddir
+## Dependencies
 
-Building directly with ninja
-ninja -C builddir
+Describe what software and libraries you will need to install in order to build and use this project. Provide details on how to resolve these dependencies.
 
-Running tests
-meson test -C buildresults
-ninja -C buildresults test
+Remember: `git-lfs` is a dependency that developers will need to resolve before they can get started with a repository using LFS.
 
-Seeing the Configuration Settings for a Given Build
-cd buildresults
-meson configure
+```
+Examples should be included
+```
 
-ninja -C buildresults clear-test-results
+## Getting the Source
+
+Include a link to your GitHub repository (you have no idea how people will find your code), and also a summary of how to clone.
+
+This project is [hosted on GitHub](https://github.com/embeddedartistry/embedded-resources). You can clone this project directly using this command:
+
+```
+git clone git@github.com:embeddedartistry/embedded-resources.git
+```
+
+## Building
+
+Instructions for how to build your project
+
+```
+Examples should be included
+```
+
+## Running Tests
+
+Describe how to run unit tests for your project.
+
+```
+Examples should be included
+```
+
+### Other Tests
+
+If you have formatting checks, coding style checks, or static analysis tests that must pass before changes will be considered, add a section for those and provide instructions
+
+## Installation
+
+Instructions for how to install your project's build artifacts
+
+```
+Examples should be included
+```
+
+## Usage
+
+Instructions for using your project. Ways to run the program, how to include it in another project, etc.
+
+```
+Examples should be included
+```
+
+If your project provides an API, either provide details for usage in this document or link to the appropriate API reference documents
+
+**[Back to top](#table-of-contents)**
+
+# Release Process
+
+Talk about the release process. How are releases made? What cadence? How to get new releases?
+
+## Versioning
+
+This project uses [Semantic Versioning](http://semver.org/). For a list of available versions, see the [repository tag list](https://github.com/your/project/tags).
+
+## Payload
+
+**[Back to top](#table-of-contents)**
+
+# How to Get Help
+
+Provide any instructions or contact information for users who need to get further help with your project.
+
+# Contributing
+
+Provide details about how people can contribute to your project. If you have a contributing guide, mention it here. e.g.:
+
+We encourage public contributions! Please review [CONTRIBUTING.md](docs/CONTRIBUTING.md) for details on our code of conduct and development process.
+
+**[Back to top](#table-of-contents)**
+
+# Further Reading
+
+Provide links to other relevant documentation here
+
+**[Back to top](#table-of-contents)**
+
+# License
+
+Copyright (c) 2020 Embedded Artistry LLC
+
+This project is licensed under the MIT License - see [LICENSE.md](LICENSE.md) file for details.
+
+**[Back to top](#table-of-contents)**
+
+# Authors
+
+* **[Phillip Johnston](https://github.com/phillipjohnston)** - *Initial work* - [Embedded Artistry](https://github.com/embeddedartistry)
+
+See also the list of [contributors](https://github.com/your/project/contributors) who participated in this project.
+
+**[Back to top](#table-of-contents)**
+
+# Acknowledgments
+
+Provide proper credits, shout-outs, and honorable mentions here. Also provide links to relevant repositories, blog posts, or contributors worth mentioning.
+
+Give proper credits. This could be a link to any repository which inspired you to build this project, any blog posts or links to people who contributed in this project. If you used external code, link to the original source.
+
+**[Back to top](#table-of-contents)**
