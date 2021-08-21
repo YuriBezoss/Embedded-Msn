@@ -52,7 +52,6 @@ add_project_arguments(
 	language: 'c',
 	native: true
 )
-
 ###############################################################
 # Generate Linker Arguments and Dependencies for Linker Files #
 ###############################################################
@@ -96,7 +95,6 @@ else
 	native_map_file = []
 endif
 
-
 if host_c_compiler.has_link_argument('-Wl,-Map,test.map')
 	host_map_file = '-Wl,-Map,@0@.map'
 elif host_c_compiler.has_link_argument('-Wl,-map,test.map')
@@ -108,7 +106,6 @@ else
 	warning('Host toolchain does not support Map file generation')
 	host_map_file = []
 endif
-
 
 # The map_file variable is a simplified alias to host_map_file
 map_file = host_map_file
@@ -185,6 +182,9 @@ endif
 # Process Source Tree #
 #######################
 
+# Add files to this variable if you want them analyzed by clang-tidy
+files_to_lint = []
+
 subdir('src')
 subdir('test')
 
@@ -195,3 +195,105 @@ subdir('test')
 run_target('clear-test-results',
 	command: meson.source_root() + '/tools/clear_test_xml.sh'
 )
+
+doxygen = find_program('doxygen', required: false, disabler: true)
+run_target('docs',
+	command: [doxygen, 'docs/Doxyfile'])
+
+clangformat = find_program('clang-format', required: false, disabler: true)
+if clangformat.found()
+	run_target('format',
+		command: 'tools/format.sh')
+
+	run_target('format-patch',
+		command: 'tools/format-patch.sh')
+endif
+
+cppcheck = find_program('cppcheck', required: false, disabler: true)
+if cppcheck.found()
+	run_target('cppcheck',
+		command: 'tools/cppcheck.sh'
+	)
+
+	run_target('cppcheck-xml',
+		command: [
+			'tools/cppcheck.sh',
+			'xml'
+		],
+	)
+endif
+
+clangtidy = find_program('clang-tidy', required: false, disabler: true)
+if clangtidy.found()
+	run_target('clang-tidy',
+		command: [
+			'tools/clang-tidy.sh',
+			# Files,
+			files_to_lint
+		],
+	)
+endif
+
+lizard_default_args = [
+	# Exclude these Directories
+	'-x', './buildresults/*',
+	'-x', './subprojects/*',
+	# Configuration
+	'--length', '75', # Fail when functions are longer than this
+	'--CCN', '10', # Fail over this CCN
+	'--arguments', '10', # Fail at this arg count
+]
+
+lizard = find_program('lizard', required: false, disabler: true)
+run_target('complexity',
+	command: [lizard,
+		lizard_default_args,
+		'-w'
+	]
+)
+
+run_target('complexity-full',
+	command: [lizard,
+		lizard_default_args
+	]
+)
+
+complexity_xml = custom_target('complexity.xml',
+	output: 'complexity.xml',
+	command: [
+		lizard,
+		lizard_default_args,
+		'--xml'
+	],
+	capture: true,
+	build_always_stale: true,
+	build_by_default: false,
+)
+
+alias_target('complexity-xml', complexity_xml)
+
+#############
+# Packaging #
+#############
+
+run_target('package',
+	command: [
+		'tools/package.sh',
+		'-a', host_machine.cpu_family(),
+		'-c', host_machine.cpu(),
+		'-s', host_machine.system(),
+		'-v', meson.project_version()
+	]
+)
+
+run_target('package-native',
+	command: [
+		'tools/package.sh',
+		'-a', build_machine.cpu_family(),
+		'-c', build_machine.cpu(),
+		'-s', build_machine.system(),
+		'-v', meson.project_version(),
+		'-n' # Use Native Files
+	]
+)
+

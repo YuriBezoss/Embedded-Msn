@@ -231,6 +231,8 @@ libc_standalone_files = [
 	crt_files,
 ]
 
+files_to_lint += [libc_common_files, libc_standalone_files]
+
 libc_include = include_directories('../include')
 libc_sys_include = include_directories('../include', is_system: true)
 
@@ -276,7 +278,7 @@ if native_c_compiler_id == 'clang'
 	libc_native_link_flags += '-nostdlib'
 
 	# We can't do this for Linux, because we need the GCC startup files (for now)
-	if build_machine.system() != 'linux'
+	if build_machine.system() != 'linux' and get_option('b_sanitize') == 'none'
 		libc_hosted_native_link_flags += '-nostdlib'
 	endif
 endif
